@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect
-from extract import get_all_jobs
-import saveCSV
+from parser import Parser
+
+import save_results
+
 
 app = Flask('HHScrapper')
 db = {}
@@ -23,30 +25,29 @@ def result():
     Returns:
         html-шаблон страницы с результатами при введенном ключе поиска, иначе - переход на главную страницу"""
 
-    inquiry = request.args.get('vacancy')
-    if inquiry:
-        inquiry = inquiry.lower()
-        jobs = get_all_jobs(inquiry)
-        count_jobs = len(jobs)
-        db['inquiry'] = jobs
+    requested_vacancy = request.args.get('vacancy')
+    if requested_vacancy:
+        parser = Parser(requested_vacancy)
+        parsed_vacancies = parser.parse_vacancies()
+        count_jobs = len(parsed_vacancies)
+        db['requested_vacancy'] = parsed_vacancies
     else:
         return redirect('/')
     return render_template('results.html',
-                           result=inquiry, jobs=jobs, count_jobs=count_jobs)
+                           result=requested_vacancy,
+                           jobs=parsed_vacancies,
+                           count_jobs=count_jobs)
 
 
 @app.route('/export')
 def export_data_to_csv():
-    """Сохранение результатов поиска в CSV-файл
-
-    Returns:
-        при наличии данных - CSV-файл, иначе - переход на главную страницу"""
+    """Сохранение результатов поиска в CSV-файл"""
 
     if db:
         try:
-            saveCSV.save_jobs_to_excel(db['inquiry'])
+            save_results.save_jobs_to_excel(db['requested_vacancy'])
             return redirect('/')
-        except Exception:
+        except:
             return ''
     return redirect('/')
 
