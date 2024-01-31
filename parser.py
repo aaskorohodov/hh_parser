@@ -1,3 +1,6 @@
+import datetime
+import time
+
 import bs4.element
 import requests
 
@@ -5,7 +8,7 @@ from bs4 import BeautifulSoup
 
 
 class Parser:
-    def __init__(self, requested_vacancy: str, items_on_page: int = 20):
+    def __init__(self, requested_vacancy: str, db: dict, items_on_page: int = 20):
         self._headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/120.0.0.0 Safari/537.36'
@@ -24,6 +27,7 @@ class Parser:
                         'order_by=relevance' \
                         '&search_period=0' \
                         '&items_on_page={items_on_page}'
+        self.db: dict = db
 
     def parse_vacancies(self) -> list[dict]:
         """Parses HH and returns a list with dicts, where each dict is parse vacancy
@@ -174,11 +178,11 @@ class Parser:
         Returns:
             список словарей с описанием вакансии"""
 
-        print(f'{last_page} pages to go...')
+        self._add_record_to_progress(f'{last_page} pages to go...')
 
         parsed_vacancies = []
         for page_num in range(last_page):
-            print(f'Getting page {page_num}/{last_page}')
+            self._add_record_to_progress(f'Getting page {page_num}/{last_page}')
 
             single_pagination_page = f'{url}&page={page_num}'
             page = requests.get(single_pagination_page, headers=self._headers)
@@ -188,3 +192,12 @@ class Parser:
                 parsed_vacancies.append(self._extract_vacancy(vacancy))
 
         return parsed_vacancies
+
+    def _add_record_to_progress(self, record: str) -> None:
+        """"""
+
+        current_dt = datetime.datetime.now().__str__()
+        if current_dt in self.db['progress']:
+            time.sleep(0.01)
+            current_dt = datetime.datetime.now().__str__()
+        self.db['progress'][current_dt] = record

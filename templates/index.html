@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>HHScrapper</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
+
 <body>
+
     <h1>Поиск вакансий на Head Hunter</h1>
     <form action="/result">
         <input placeholder="Название вакансии" required name="vacancy">
         <button>Найти</button>
     </form>
+
+    <div id="result-container"></div>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/progress.js') }}"></script>
 </body>
 </html>
