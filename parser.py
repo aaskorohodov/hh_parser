@@ -8,36 +8,45 @@ from bs4 import BeautifulSoup
 
 
 class Parser:
+    """Responsible for parsing data
+
+    Attributes:
+        _headers: Headers for the request
+        _requested_vacancy: Stores a string, representing requested vacancy ('GoLag developer')
+        _items_on_page: How many vacancies to store on page (setting from HH)
+        _base_url: Base URL to make initial search
+        _db: DB emulation"""
+
     def __init__(self, requested_vacancy: str, db: dict, items_on_page: int = 20):
         self._headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/120.0.0.0 Safari/537.36'
                          }
-        self.requested_vacancy: str = requested_vacancy.replace(' ', '+').lower()
-        self.items_on_page: int = items_on_page
-        self.base_url = 'https://ekaterinburg.hh.ru/search/vacancy' \
-                        '?L_save_area=true' \
-                        '&text={requested_vacancy}' \
-                        '&excluded_text=' \
-                        '&area=113' \
-                        '&salary=' \
-                        '&currency_code=RUR' \
-                        '&only_with_salary=true' \
-                        '&experience=doesNotMatter&' \
-                        'order_by=relevance' \
-                        '&search_period=0' \
-                        '&items_on_page={items_on_page}'
-        self.db: dict = db
+        self._requested_vacancy: str = requested_vacancy.replace(' ', '+').lower()
+        self._items_on_page: int = items_on_page
+        self._base_url = 'https://ekaterinburg.hh.ru/search/vacancy' \
+                         '?L_save_area=true' \
+                         '&text={requested_vacancy}' \
+                         '&excluded_text=' \
+                         '&area=113' \
+                         '&salary=' \
+                         '&currency_code=RUR' \
+                         '&only_with_salary=true' \
+                         '&experience=doesNotMatter&' \
+                         'order_by=relevance' \
+                         '&search_period=0' \
+                         '&items_on_page={items_on_page}'
+        self._db: dict = db
 
     def parse_vacancies(self) -> list[dict]:
         """Parses HH and returns a list with dicts, where each dict is parse vacancy
 
         Returns:
-            список словарей с описанием вакансии по уникальному запросу"""
+            List of dictionaries with a job description based on a unique request"""
 
-        url = self.base_url.format(
-            requested_vacancy=self.requested_vacancy,
-            items_on_page=self.items_on_page
+        url = self._base_url.format(
+            requested_vacancy=self._requested_vacancy,
+            items_on_page=self._items_on_page
         )
 
         last_page_number = self._find_last_available_page_number(url)
@@ -170,13 +179,13 @@ class Parser:
         return parts_formatted
 
     def _parse_vacancies(self, last_page: int, url: str) -> list[dict]:
-        """Возвращает результат поиска по всем вакансиям на всех страницах
+        """Returns the search result for all vacancies on all pages
 
         Args:
-            url:
-            last_page: максимальное число страниц с вакансиями
+            last_page: number of the last page from pagination
+            url: url, used to make initial search
         Returns:
-            список словарей с описанием вакансии"""
+            list of dictionaries with job description"""
 
         self._add_record_to_progress(f'{last_page} pages to go...')
 
@@ -194,10 +203,13 @@ class Parser:
         return parsed_vacancies
 
     def _add_record_to_progress(self, record: str) -> None:
-        """"""
+        """Saves some string into emulated DB
+
+        Args:
+            record: String to save"""
 
         current_dt = datetime.datetime.now().__str__()
-        if current_dt in self.db['progress']:
+        if current_dt in self._db['progress']:
             time.sleep(0.01)
             current_dt = datetime.datetime.now().__str__()
-        self.db['progress'][current_dt] = record
+        self._db['progress'][current_dt] = record

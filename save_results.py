@@ -5,11 +5,13 @@ import os.path
 import pandas as pd
 
 
-def save_jobs_to_csv(jobs: list[dict]) -> None:
-    """Сохраняет полученный список с вакансиями в csv-файл
+def save_jobs_to_csv(db: dict) -> None:
+    """Saves the resulting list of vacancies to a csv file
 
     Args:
-        jobs: список с вакансиями после парсинга"""
+        db: DB-emulation"""
+
+    jobs = db['requested_vacancy']
 
     rows = list(jobs[0].keys())  # Наименование колонок
     with open('jobs.csv', mode='w', encoding='utf-8') as file:
@@ -20,12 +22,14 @@ def save_jobs_to_csv(jobs: list[dict]) -> None:
 
 
 def save_jobs_to_excel(db: dict) -> None:
-    """"""
+    """Saves the resulting list of vacancies to an Excel file
+
+    Args:
+        db: DB-emulation"""
 
     jobs = db['requested_vacancy']
 
     try:
-        # Create the 'results' directory if it doesn't exist
         results_dir = 'results'
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
@@ -39,5 +43,6 @@ def save_jobs_to_excel(db: dict) -> None:
 
         df.to_excel(excel_file_path, index=False)
         db['progress'][datetime.datetime.now().__str__()] = '------------ Сохранено! ------------'
+
     except Exception as e:
         db['progress'][datetime.datetime.now().__str__()] = f'Не сохранено! Ошибка:\n {e.__str__()}'
