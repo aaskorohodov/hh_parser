@@ -1,4 +1,5 @@
 import os
+import time
 import webbrowser
 
 from datetime import datetime
@@ -76,7 +77,6 @@ def progress_api():
 port = os.environ.get('PORT')
 host = os.environ.get('HOST')
 
-# Will automatically open web-browser
 webbrowser.open(f'http://{host}:{port}/')
 
 app.run(host=host, port=port)

@@ -2,26 +2,22 @@ import datetime
 import time
 
 import bs4.element
-import requests
 
 from bs4 import BeautifulSoup
+
+from request_maker import Requester
 
 
 class Parser:
     """Responsible for parsing data
 
     Attributes:
-        _headers: Headers for the request
         _requested_vacancy: Stores a string, representing requested vacancy ('GoLag developer')
         _items_on_page: How many vacancies to store on page (setting from HH)
         _base_url: Base URL to make initial search
         _db: DB emulation"""
 
     def __init__(self, requested_vacancy: str, db: dict, items_on_page: int = 20):
-        self._headers = {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/120.0.0.0 Safari/537.36'
-                         }
         self._requested_vacancy: str = requested_vacancy.replace(' ', '+').lower()
         self._items_on_page: int = items_on_page
         self._base_url = 'https://ekaterinburg.hh.ru/search/vacancy' \
@@ -37,6 +33,7 @@ class Parser:
                          '&search_period=0' \
                          '&items_on_page={items_on_page}'
         self._db: dict = db
+        self._requester: Requester = Requester(db)
 
     def parse_vacancies(self) -> list[dict]:
         """Parses HH and returns a list with dicts, where each dict is parse vacancy
@@ -60,7 +57,7 @@ class Parser:
         Returns:
             Last available page number"""
 
-        hh_request = requests.get(url, headers=self._headers)
+        hh_request = self._requester.make_request(url)
         hh_soup = BeautifulSoup(hh_request.text, 'html.parser')
         paginator = hh_soup.find_all('a', {'data-qa': 'pager-page'})  # Finding all link in paginator
         pages = []
@@ -194,7 +191,7 @@ class Parser:
             self._add_record_to_progress(f'Getting page {page_num}/{last_page}')
 
             single_pagination_page = f'{url}&page={page_num}'
-            page = requests.get(single_pagination_page, headers=self._headers)
+            page = self._requester.make_request(single_pagination_page)
             page_soup = BeautifulSoup(page.text, 'html.parser')
             vacancies = page_soup.find_all('div', {'class': 'vacancy-serp-item__layout'})
             for vacancy in vacancies:
