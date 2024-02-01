@@ -1,5 +1,4 @@
 import os
-import time
 import webbrowser
 
 from datetime import datetime
